@@ -26,3 +26,7 @@ Thumbs.db
 
 # Data files (opcional - comentar si quieres versionar los datos)
 # data/*.json
+
+# MongoDB
+*.lock
+*.pid

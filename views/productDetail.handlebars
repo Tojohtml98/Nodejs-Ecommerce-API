@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">E-commerce</a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/home">Home</a>
+                <a class="nav-link active" href="/products">Productos</a>
+                <a class="nav-link" href="/realtimeproducts">Tiempo Real</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <a href="/products" class="btn btn-secondary mb-3">← Volver a Productos</a>
+                
+                {{#if product}}
+                    <div class="card">
+                        <div class="card-body">
+                            <h2 class="card-title">{{product.title}}</h2>
+                            <p class="card-text">{{product.description}}</p>
+                            
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <h5>Detalles del Producto</h5>
+                                    <ul class="list-unstyled">
+                                        <li><strong>Precio:</strong> ${{product.price}}</li>
+                                        <li><strong>Stock:</strong> {{product.stock}}</li>
+                                        <li><strong>Categoría:</strong> {{product.category}}</li>
+                                        <li><strong>Código:</strong> {{product.code}}</li>
+                                        <li><strong>ID:</strong> {{product._id}}</li>
+                                        <li><strong>Estado:</strong> 
+                                            <span class="badge {{#if product.status}}bg-success{{else}}bg-danger{{/if}}">
+                                                {{#if product.status}}Disponible{{else}}No Disponible{{/if}}
+                                            </span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    {{#if product.thumbnails.length}}
+                                        <h5>Imágenes</h5>
+                                        <div class="row">
+                                            {{#each product.thumbnails}}
+                                            <div class="col-6 mb-3">
+                                                <img src="{{this}}" class="img-fluid" alt="Producto">
+                                            </div>
+                                            {{/each}}
+                                        </div>
+                                    {{/if}}
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <button class="btn btn-success btn-lg" onclick="addToCart('{{product._id}}')">
+                                    Agregar al Carrito
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {{else}}
+                    <div class="alert alert-danger">
+                        <h4>Producto no encontrado</h4>
+                        <p>El producto que buscas no existe.</p>
+                    </div>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        async function addToCart(productId) {
+            try {
+                // Primero crear un carrito si no existe uno
+                const cartResponse = await fetch('/api/carts', {
+                    method: 'POST'
+                });
+                const cartData = await cartResponse.json();
+                
+                if (cartData.status === 'success') {
+                    const cartId = cartData.payload._id;
+                    
+                    // Agregar producto al carrito
+                    const addResponse = await fetch(`/api/carts/${cartId}/product/${productId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ quantity: 1 })
+                    });
+                    
+                    const addData = await addResponse.json();
+                    
+                    if (addData.status === 'success') {
+                        alert('Producto agregado al carrito exitosamente');
+                        window.location.href = `/carts/${cartId}`;
+                    } else {
+                        alert('Error al agregar producto: ' + addData.message);
+                    }
+                } else {
+                    alert('Error al crear carrito');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
+

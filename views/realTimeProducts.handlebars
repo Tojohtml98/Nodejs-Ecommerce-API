@@ -101,7 +101,7 @@
                     {{#if products.length}}
                         <div class="row" id="productsList">
                             {{#each products}}
-                            <div class="col-md-4 mb-4" data-product-id="{{id}}">
+                            <div class="col-md-4 mb-4" data-product-id="{{_id}}">
                                 <div class="card product-card h-100">
                                     <div class="card-body">
                                         <h5 class="card-title">{{title}}</h5>
@@ -111,9 +111,9 @@
                                             <li><strong>Stock:</strong> {{stock}}</li>
                                             <li><strong>Categoría:</strong> {{category}}</li>
                                             <li><strong>Código:</strong> {{code}}</li>
-                                            <li><strong>ID:</strong> {{id}}</li>
+                                            <li><strong>ID:</strong> {{_id}}</li>
                                         </ul>
-                                        <button class="btn btn-danger btn-sm" onclick="deleteProduct('{{id}}')">Eliminar</button>
+                                        <button class="btn btn-danger btn-sm" onclick="deleteProduct('{{_id}}')">Eliminar</button>
                                     </div>
                                 </div>
                             </div>
@@ -212,7 +212,7 @@
             }
 
             productsList.innerHTML = products.map(product => `
-                <div class="col-md-4 mb-4" data-product-id="${product.id}">
+                <div class="col-md-4 mb-4" data-product-id="${product._id}">
                     <div class="card product-card h-100">
                         <div class="card-body">
                             <h5 class="card-title">${product.title}</h5>
@@ -222,9 +222,9 @@
                                 <li><strong>Stock:</strong> ${product.stock}</li>
                                 <li><strong>Categoría:</strong> ${product.category}</li>
                                 <li><strong>Código:</strong> ${product.code}</li>
-                                <li><strong>ID:</strong> ${product.id}</li>
+                                <li><strong>ID:</strong> ${product._id}</li>
                             </ul>
-                            <button class="btn btn-danger btn-sm" onclick="deleteProduct('${product.id}')">Eliminar</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteProduct('${product._id}')">Eliminar</button>
                         </div>
                     </div>
                 </div>
@@ -239,7 +239,7 @@
             
             const productElement = document.createElement('div');
             productElement.className = 'col-md-4 mb-4';
-            productElement.setAttribute('data-product-id', product.id);
+            productElement.setAttribute('data-product-id', product._id);
             productElement.innerHTML = `
                 <div class="card product-card h-100">
                     <div class="card-body">
@@ -250,9 +250,9 @@
                             <li><strong>Stock:</strong> ${product.stock}</li>
                             <li><strong>Categoría:</strong> ${product.category}</li>
                             <li><strong>Código:</strong> ${product.code}</li>
-                            <li><strong>ID:</strong> ${product.id}</li>
+                            <li><strong>ID:</strong> ${product._id}</li>
                         </ul>
-                        <button class="btn btn-danger btn-sm" onclick="deleteProduct('${product.id}')">Eliminar</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteProduct('${product._id}')">Eliminar</button>
                     </div>
                 </div>
             `;

@@ -9,6 +9,7 @@ import productsRouter from './routes/products.router.js';
 import cartsRouter from './routes/carts.router.js';
 import viewsRouter from './routes/views.router.js';
 import ProductManager from './managers/ProductManager.js';
+import { connectDB } from './config/database.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -60,45 +61,57 @@ app.use((req, res) => {
 // --- Middleware global de errores ---
 app.use(errorHandler);
 
-// --- Instancia única de ProductManager ---
-const productManager = new ProductManager();
-
-// --- Socket.IO ---
-io.on('connection', (socket) => {
-    console.log('Cliente conectado:', socket.id);
-
-    // Agregar producto
-    socket.on('addProduct', async (productData) => {
-        try {
-            const newProduct = await productManager.addProduct(productData);
-            const updatedProducts = await productManager.getProducts();
-
-            io.emit('productAdded', newProduct);
-            io.emit('productsUpdated', updatedProducts);
-        } catch (error) {
-            socket.emit('error', { message: error.message });
-        }
-    });
-
-    // Eliminar producto
-    socket.on('deleteProduct', async (productId) => {
-        try {
-            await productManager.deleteProduct(productId);
-            const updatedProducts = await productManager.getProducts();
-
-            io.emit('productDeleted', productId);
-            io.emit('productsUpdated', updatedProducts);
-        } catch (error) {
-            socket.emit('error', { message: error.message });
-        }
-    });
-
-    socket.on('disconnect', () => {
-        console.log('Cliente desconectado:', socket.id);
-    });
-});
-
 // --- Iniciar servidor ---
-server.listen(PORT, () => {
-    console.log(`Servidor escuchando en http://localhost:${PORT}`);
-});
+const startServer = async () => {
+    try {
+        // --- Conectar a MongoDB ---
+        await connectDB();
+
+        // --- Instancia única de ProductManager ---
+        const productManager = new ProductManager();
+
+        // --- Socket.IO ---
+        io.on('connection', (socket) => {
+            console.log('Cliente conectado:', socket.id);
+
+            // Agregar producto
+            socket.on('addProduct', async (productData) => {
+                try {
+                    const newProduct = await productManager.addProduct(productData);
+                    const updatedProducts = await productManager.getProducts();
+
+                    io.emit('productAdded', newProduct);
+                    io.emit('productsUpdated', updatedProducts);
+                } catch (error) {
+                    socket.emit('error', { message: error.message });
+                }
+            });
+
+            // Eliminar producto
+            socket.on('deleteProduct', async (productId) => {
+                try {
+                    await productManager.deleteProduct(productId);
+                    const updatedProducts = await productManager.getProducts();
+
+                    io.emit('productDeleted', productId);
+                    io.emit('productsUpdated', updatedProducts);
+                } catch (error) {
+                    socket.emit('error', { message: error.message });
+                }
+            });
+
+            socket.on('disconnect', () => {
+                console.log('Cliente desconectado:', socket.id);
+            });
+        });
+
+        server.listen(PORT, () => {
+            console.log(`Servidor escuchando en http://localhost:${PORT}`);
+        });
+    } catch (error) {
+        console.error('Error al iniciar el servidor:', error);
+        process.exit(1);
+    }
+};
+
+startServer();

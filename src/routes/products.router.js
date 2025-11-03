@@ -6,14 +6,21 @@ import { validateSchema } from '../middlewares/validation.js';
 const router = Router();
 const productManager = new ProductManager();
 
-// GET / - Listar todos los productos
+// GET / - Listar todos los productos con paginación y filtros
 router.get('/', async (req, res) => {
     try {
-        const products = await productManager.getProducts();
-        res.json({
-            status: 'success',
-            payload: products
-        });
+        const { limit, page, sort, query } = req.query;
+        
+        // Procesar los filtros
+        const filters = {
+            limit: limit || 10,
+            page: page || 1,
+            sort: sort,
+            query: query ? decodeURIComponent(query) : {}
+        };
+
+        const result = await productManager.getProducts(filters);
+        res.json(result);
     } catch (error) {
         res.status(500).json({
             status: 'error',

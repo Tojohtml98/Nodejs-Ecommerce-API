@@ -23,11 +23,11 @@ router.post('/', async (req, res) => {
     }
 });
 
-// GET /:cid - Obtener los productos de un carrito
+// GET /:cid - Obtener los productos de un carrito (con populate)
 router.get('/:cid', async (req, res, next) => {
     try {
         const { cid } = req.params;
-        const cart = await cartManager.getCartById(cid);
+        const cart = await cartManager.getCartByIdPopulated(cid);
         
         if (!cart) {
             return res.status(404).json({
@@ -58,6 +58,81 @@ router.post('/:cid/product/:pid',
         res.json({
             status: 'success',
             message: 'Producto agregado al carrito exitosamente',
+            payload: updatedCart
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// DELETE /:cid/products/:pid - Eliminar un producto del carrito
+router.delete('/:cid/products/:pid', async (req, res, next) => {
+    try {
+        const { cid, pid } = req.params;
+        const updatedCart = await cartManager.removeProductFromCart(cid, pid);
+        
+        res.json({
+            status: 'success',
+            message: 'Producto eliminado del carrito exitosamente',
+            payload: updatedCart
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// PUT /:cid - Actualizar todos los productos del carrito
+router.put('/:cid', async (req, res, next) => {
+    try {
+        const { cid } = req.params;
+        const { products } = req.body;
+        
+        const updatedCart = await cartManager.updateCartProducts(cid, products);
+        
+        res.json({
+            status: 'success',
+            message: 'Carrito actualizado exitosamente',
+            payload: updatedCart
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// PUT /:cid/products/:pid - Actualizar la cantidad de un producto en el carrito
+router.put('/:cid/products/:pid', async (req, res, next) => {
+    try {
+        const { cid, pid } = req.params;
+        const { quantity } = req.body;
+        
+        if (!quantity || !Number.isInteger(quantity) || quantity < 1) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'La cantidad debe ser un número entero mayor a 0'
+            });
+        }
+        
+        const updatedCart = await cartManager.updateProductQuantity(cid, pid, quantity);
+        
+        res.json({
+            status: 'success',
+            message: 'Cantidad actualizada exitosamente',
+            payload: updatedCart
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// DELETE /:cid - Eliminar todos los productos del carrito
+router.delete('/:cid', async (req, res, next) => {
+    try {
+        const { cid } = req.params;
+        const updatedCart = await cartManager.clearCart(cid);
+        
+        res.json({
+            status: 'success',
+            message: 'Carrito vaciado exitosamente',
             payload: updatedCart
         });
     } catch (error) {

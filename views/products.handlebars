@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .product-card {
+            transition: transform 0.2s;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+        .filter-container {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">E-commerce</a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/home">Home</a>
+                <a class="nav-link active" href="/products">Productos</a>
+                <a class="nav-link" href="/realtimeproducts">Tiempo Real</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="mb-4">{{title}}</h1>
+                
+                {{#if products.length}}
+                    <div class="row">
+                        {{#each products}}
+                        <div class="col-md-4 mb-4">
+                            <div class="card product-card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{title}}</h5>
+                                    <p class="card-text">{{description}}</p>
+                                    <ul class="list-unstyled">
+                                        <li><strong>Precio:</strong> ${{price}}</li>
+                                        <li><strong>Stock:</strong> {{stock}}</li>
+                                        <li><strong>Categoría:</strong> {{category}}</li>
+                                        <li><strong>Código:</strong> {{code}}</li>
+                                    </ul>
+                                    <div class="d-flex gap-2">
+                                        <a href="/products/{{_id}}" class="btn btn-primary">Ver Detalles</a>
+                                        <button class="btn btn-success" onclick="addToCart('{{_id}}')">Agregar al Carrito</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {{/each}}
+                    </div>
+
+                    <!-- Paginación -->
+                    {{#if pagination.totalPages}}
+                    <nav aria-label="Paginación de productos">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item {{#unless pagination.hasPrevPage}}disabled{{/unless}}">
+                                <a class="page-link" href="{{pagination.prevLink}}">Anterior</a>
+                            </li>
+                            <li class="page-item active">
+                                <span class="page-link">Página {{pagination.page}} de {{pagination.totalPages}}</span>
+                            </li>
+                            <li class="page-item {{#unless pagination.hasNextPage}}disabled{{/unless}}">
+                                <a class="page-link" href="{{pagination.nextLink}}">Siguiente</a>
+                            </li>
+                        </ul>
+                    </nav>
+                    {{/if}}
+                {{else}}
+                    <div class="alert alert-info">
+                        <h4>No hay productos disponibles</h4>
+                        <p>No se encontraron productos en la base de datos.</p>
+                    </div>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        async function addToCart(productId) {
+            try {
+                // Primero crear un carrito si no existe uno
+                const cartResponse = await fetch('/api/carts', {
+                    method: 'POST'
+                });
+                const cartData = await cartResponse.json();
+                
+                if (cartData.status === 'success') {
+                    const cartId = cartData.payload._id;
+                    
+                    // Agregar producto al carrito
+                    const addResponse = await fetch(`/api/carts/${cartId}/product/${productId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ quantity: 1 })
+                    });
+                    
+                    const addData = await addResponse.json();
+                    
+                    if (addData.status === 'success') {
+                        alert('Producto agregado al carrito exitosamente');
+                    } else {
+                        alert('Error al agregar producto: ' + addData.message);
+                    }
+                } else {
+                    alert('Error al crear carrito');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
+

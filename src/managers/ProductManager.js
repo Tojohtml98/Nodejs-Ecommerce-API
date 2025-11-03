@@ -1,140 +1,207 @@
-import fs from 'fs/promises';
-import { v4 as uuidv4 } from 'uuid';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const productsPath = path.join(__dirname, '../../data/products.json');
+import Product from '../models/Product.js';
 
 class ProductManager {
     constructor() {
-        this.products = [];
-        this.loadProducts();
+        this.model = Product;
     }
 
-    async loadProducts() {
+    async getProducts(filters = {}) {
         try {
-            const data = await fs.readFile(productsPath, 'utf-8');
-            this.products = JSON.parse(data);
-        } catch (error) {
-            if (error.code === 'ENOENT') {
-                await this.saveProducts();
-            } else {
-                console.error('Error loading products:', error);
+            const {
+                limit = 10,
+                page = 1,
+                sort = null,
+                query = {}
+            } = filters;
+
+            // Construir el filtro de búsqueda
+            let mongoQuery = {};
+
+            // Si hay un query (filtro), aplicarlo
+            if (query) {
+                if (typeof query === 'string') {
+                    // Si es string, intentar parsearlo
+                    try {
+                        mongoQuery = JSON.parse(query);
+                    } catch (e) {
+                        // Si no se puede parsear, tratarlo como búsqueda por categoría
+                        mongoQuery = { category: query };
+                    }
+                } else {
+                    mongoQuery = query;
+                }
             }
-        }
-    }
 
-    async saveProducts() {
-        try {
-            await fs.writeFile(productsPath, JSON.stringify(this.products, null, 2), 'utf-8');
+            // Construir opciones de paginación y ordenamiento
+            const options = {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                lean: true // Para obtener objetos JavaScript simples en lugar de documentos Mongoose
+            };
+
+            // Agregar ordenamiento si se especifica
+            if (sort) {
+                const sortOrder = sort.toLowerCase() === 'desc' ? -1 : 1;
+                options.sort = { price: sortOrder };
+            }
+
+            // Ejecutar la consulta con paginación
+            const result = await this.model.paginate(mongoQuery, options);
+
+            // Construir parámetros de query para los links
+            const buildQueryParams = (pageNum) => {
+                const params = new URLSearchParams();
+                params.append('page', pageNum);
+                params.append('limit', limit);
+                if (sort) params.append('sort', sort);
+                if (query && Object.keys(mongoQuery).length > 0) {
+                    params.append('query', encodeURIComponent(JSON.stringify(mongoQuery)));
+                }
+                return params.toString();
+            };
+
+            return {
+                status: result.docs.length > 0 ? 'success' : 'error',
+                payload: result.docs,
+                totalPages: result.totalPages,
+                prevPage: result.prevPage,
+                nextPage: result.nextPage,
+                page: result.page,
+                hasPrevPage: result.hasPrevPage,
+                hasNextPage: result.hasNextPage,
+                prevLink: result.hasPrevPage 
+                    ? `/api/products?${buildQueryParams(result.prevPage)}`
+                    : null,
+                nextLink: result.hasNextPage 
+                    ? `/api/products?${buildQueryParams(result.nextPage)}`
+                    : null
+            };
         } catch (error) {
-            console.error('Error saving products:', error);
-            throw new Error('Failed to save products');
+            console.error('Error getting products:', error);
+            throw error;
         }
-    }
-
-    async getProducts(limit) {
-        if (limit) {
-            return this.products.slice(0, limit);
-        }
-        return this.products;
     }
 
     async getProductById(id) {
-        const product = this.products.find(p => p.id === id);
-        if (!product) {
+        try {
+            const product = await this.model.findById(id);
+            if (!product) {
+                throw new Error('Producto no encontrado');
+            }
+            return product;
+        } catch (error) {
+            if (error.message === 'Producto no encontrado') {
+                throw error;
+            }
             throw new Error('Producto no encontrado');
         }
-        return product;
     }
 
     async productExists(code) {
-        return this.products.some(p => p.code === code);
+        try {
+            const product = await this.model.findOne({ code });
+            return !!product;
+        } catch (error) {
+            console.error('Error checking product existence:', error);
+            return false;
+        }
     }
 
     async addProduct(productData) {
-        // Generate code if not provided
-        if (!productData.code) {
-            productData.code = `PROD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        }
-        
-        if (await this.productExists(productData.code)) {
-            throw new Error('Ya existe un producto con el mismo código');
-        }
+        try {
+            // Generate code if not provided
+            if (!productData.code) {
+                productData.code = `PROD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            }
+            
+            if (await this.productExists(productData.code)) {
+                throw new Error('Ya existe un producto con el mismo código');
+            }
 
-        const newProduct = {
-            id: uuidv4(),
-            ...productData,
-            status: productData.status !== undefined ? productData.status : true
-        };
-
-        this.products.push(newProduct);
-        await this.saveProducts();
-        return newProduct;
+            const newProduct = new this.model(productData);
+            await newProduct.save();
+            return newProduct;
+        } catch (error) {
+            if (error.code === 11000) { // Duplicate key error
+                throw new Error('Ya existe un producto con el mismo código');
+            }
+            throw error;
+        }
     }
 
     async updateProduct(id, updateData) {
-        const productIndex = this.products.findIndex(p => p.id === id);
-        
-        if (productIndex === -1) {
-            throw new Error('Producto no encontrado');
-        }
+        try {
+            if (updateData.code) {
+                const existingProduct = await this.model.findOne({ 
+                    code: updateData.code,
+                    _id: { $ne: id }
+                });
+                
+                if (existingProduct) {
+                    throw new Error('Ya existe otro producto con el mismo código');
+                }
+            }
 
-        if (updateData.code && updateData.code !== this.products[productIndex].code) {
-            if (await this.productExists(updateData.code)) {
+            const updatedProduct = await this.model.findByIdAndUpdate(
+                id,
+                updateData,
+                { new: true, runValidators: true }
+            );
+
+            if (!updatedProduct) {
+                throw new Error('Producto no encontrado');
+            }
+
+            return updatedProduct;
+        } catch (error) {
+            if (error.code === 11000) { // Duplicate key error
                 throw new Error('Ya existe otro producto con el mismo código');
             }
+            throw error;
         }
-
-        this.products[productIndex] = {
-            ...this.products[productIndex],
-            ...updateData,
-            id // Ensure ID remains the same
-        };
-
-        await this.saveProducts();
-        return this.products[productIndex];
     }
 
     async deleteProduct(id) {
-        const productIndex = this.products.findIndex(p => p.id === id);
-        
-        if (productIndex === -1) {
+        try {
+            const deletedProduct = await this.model.findByIdAndDelete(id);
+            if (!deletedProduct) {
+                throw new Error('Producto no encontrado');
+            }
+            return deletedProduct;
+        } catch (error) {
             throw new Error('Producto no encontrado');
         }
-
-        const [deletedProduct] = this.products.splice(productIndex, 1);
-        await this.saveProducts();
-        return deletedProduct;
     }
 
     async hasStock(productId, quantity = 1) {
-        const product = await this.getProductById(productId);
-        return product.stock >= quantity;
+        try {
+            const product = await this.getProductById(productId);
+            return product.stock >= quantity;
+        } catch (error) {
+            return false;
+        }
     }
 
     async updateStock(productId, quantity, action = 'decrement') {
-        const productIndex = this.products.findIndex(p => p.id === productId);
-        
-        if (productIndex === -1) {
-            throw new Error('Producto no encontrado');
-        }
-
-        if (action === 'decrement') {
-            if (this.products[productIndex].stock < quantity) {
-                throw new Error('Stock insuficiente');
+        try {
+            const product = await this.getProductById(productId);
+            
+            if (action === 'decrement') {
+                if (product.stock < quantity) {
+                    throw new Error('Stock insuficiente');
+                }
+                product.stock -= quantity;
+            } else if (action === 'increment') {
+                product.stock += quantity;
+            } else {
+                throw new Error('Acción no válida para actualizar el stock');
             }
-            this.products[productIndex].stock -= quantity;
-        } else if (action === 'increment') {
-            this.products[productIndex].stock += quantity;
-        } else {
-            throw new Error('Acción no válida para actualizar el stock');
-        }
 
-        await this.saveProducts();
-        return this.products[productIndex];
+            await product.save();
+            return product;
+        } catch (error) {
+            throw error;
+        }
     }
 }
 
