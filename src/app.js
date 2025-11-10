@@ -5,6 +5,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { engine } from 'express-handlebars';
 import { errorHandler } from './middlewares/validation.js';
+import { socketMiddleware } from './middlewares/socketMiddleware.js';
 import productsRouter from './routes/products.router.js';
 import cartsRouter from './routes/carts.router.js';
 import viewsRouter from './routes/views.router.js';
@@ -28,8 +29,8 @@ app.set('views', path.join(__dirname, '../views'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// --- Hacer io globalmente accesible ---
-app.set('io', io);
+// --- Socket.IO middleware ---
+app.use(socketMiddleware(io));
 
 // --- Rutas ---
 app.use('/api/products', productsRouter);
@@ -67,38 +68,9 @@ const startServer = async () => {
         // --- Conectar a MongoDB ---
         await connectDB();
 
-        // --- Instancia única de ProductManager ---
-        const productManager = new ProductManager();
-
-        // --- Socket.IO ---
+        // --- Socket.IO: Manejo de conexiones ---
         io.on('connection', (socket) => {
             console.log('Cliente conectado:', socket.id);
-
-            // Agregar producto
-            socket.on('addProduct', async (productData) => {
-                try {
-                    const newProduct = await productManager.addProduct(productData);
-                    const updatedProducts = await productManager.getProducts();
-
-                    io.emit('productAdded', newProduct);
-                    io.emit('productsUpdated', updatedProducts);
-                } catch (error) {
-                    socket.emit('error', { message: error.message });
-                }
-            });
-
-            // Eliminar producto
-            socket.on('deleteProduct', async (productId) => {
-                try {
-                    await productManager.deleteProduct(productId);
-                    const updatedProducts = await productManager.getProducts();
-
-                    io.emit('productDeleted', productId);
-                    io.emit('productsUpdated', updatedProducts);
-                } catch (error) {
-                    socket.emit('error', { message: error.message });
-                }
-            });
 
             socket.on('disconnect', () => {
                 console.log('Cliente desconectado:', socket.id);
