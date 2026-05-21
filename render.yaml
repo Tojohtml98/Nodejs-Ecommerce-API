@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: nodejs-ecommerce-api
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: NODE_ENV
+        value: production

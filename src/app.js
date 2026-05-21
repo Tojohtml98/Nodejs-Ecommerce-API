@@ -18,7 +18,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const server = createServer(app);
 const io = new Server(server);
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 
 // --- Configuración Handlebars ---
 app.engine('handlebars', engine());
