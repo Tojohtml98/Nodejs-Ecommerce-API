@@ -45,8 +45,18 @@ app.get('/', (req, res) => {
             products: '/api/products',
             carts: '/api/carts',
             home: '/home',
-            realtime: '/realtimeproducts'
+            realtime: '/realtimeproducts',
+            health: '/health'
         }
+    });
+});
+
+// --- Health check ---
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString()
     });
 });
 

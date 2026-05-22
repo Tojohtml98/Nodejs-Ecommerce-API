@@ -1,426 +1,173 @@
-# E-commerce API con WebSockets y MongoDB
+<h1 align="center">E-commerce API · Real-Time Catalog</h1>
 
-API REST para la gestión de productos y carritos de compra desarrollada con Node.js, Express, Handlebars, Socket.IO y MongoDB.
+<p align="center">
+  <strong>REST API for products and carts with live updates over WebSockets, server-side views, paginated queries and Joi-validated mutations.</strong>
+</p>
 
-## Características
+<p align="center">
+  <a href="https://nodejs-ecommerce-api-oqbu.onrender.com">Live API ↗</a> ·
+  <a href="https://nodejs-ecommerce-api-oqbu.onrender.com/realtimeproducts">Realtime Demo ↗</a> ·
+  <a href="https://nodejs-ecommerce-api-oqbu.onrender.com/health">Health ↗</a>
+</p>
 
-- ✅ Gestión completa de productos (CRUD)
-- ✅ Gestión de carritos de compra con referencias a productos
-- ✅ **Vistas con Handlebars** (home, productos, detalle de producto, carrito)
-- ✅ **WebSockets con Socket.IO** para actualizaciones en tiempo real
-- ✅ **Persistencia en MongoDB** con Mongoose
-- ✅ **Paginación y filtros** de productos
-- ✅ **Ordenamiento** ascendente/descendente por precio
-- ✅ Validación de datos con Joi
-- ✅ Manejo de errores consistente con códigos HTTP apropiados
-- ✅ Validación de stock y existencia de productos
-- ✅ **Populate** de productos en carritos
-- ✅ IDs autogenerados (ObjectId de MongoDB)
+<p align="center">
+  <img src="https://img.shields.io/badge/Node.js-20-339933?logo=node.js&logoColor=white" alt="Node 20" />
+  <img src="https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white" alt="Express" />
+  <img src="https://img.shields.io/badge/Socket.IO-4-010101?logo=socket.io&logoColor=white" alt="Socket.IO" />
+  <img src="https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white" alt="MongoDB" />
+  <img src="https://img.shields.io/badge/Joi-validation-0769AD" alt="Joi" />
+  <img src="https://img.shields.io/badge/Handlebars-views-F0772B?logo=handlebarsdotjs&logoColor=white" alt="Handlebars" />
+  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT" />
+</p>
 
-## Requisitos
+---
 
-- Node.js (v14 o superior)
-- npm
-- **MongoDB** (instalado y ejecutándose)
+## Overview
 
-## Instalación
+A catalog backend built around two ideas: **the API and the views share the same source of truth**, and **mutations propagate in real time**. Adding a product through `POST /api/products` updates the live page instantly through Socket.IO — no refresh, no polling.
 
-1. Clonar el repositorio
-2. Instalar las dependencias:
+It is the kind of project you build to understand how Express, Mongoose, validation middleware, server-rendered views and a WebSocket channel actually fit together — not a separate Frankenstein per concern.
+
+---
+
+## Tech Stack
+
+- **Runtime** — Node.js 20 (ES Modules), Express 4
+- **Database** — MongoDB (Mongoose ODM) with `mongoose-paginate-v2`
+- **Realtime** — Socket.IO 4 (server emits, view consumes)
+- **Views** — Handlebars via `express-handlebars`
+- **Validation** — Joi schemas through `express-joi-validation`
+- **Tooling** — Nodemon (dev), dotenv
+
+---
+
+## Architecture
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                       HTTP layer                         │
+│  ┌──────────┐   ┌──────────┐   ┌──────────────────────┐  │
+│  │  REST    │   │  Views   │   │   Socket.IO server   │  │
+│  │ /api/*   │   │  /, /rt  │   │  (broadcast events)  │  │
+│  └────┬─────┘   └────┬─────┘   └──────────┬───────────┘  │
+└───────┼──────────────┼────────────────────┼──────────────┘
+        ▼              ▼                    │
+   ┌──────────┐   ┌──────────┐              │
+   │ Joi      │   │ HBS      │              │
+   │ schemas  │   │ templates│              │
+   └────┬─────┘   └──────────┘              │
+        ▼                                   │
+   ┌──────────────────────┐                 │
+   │  ProductManager /    │ ◀───────────────┘
+   │  CartManager         │   (emits on mutation)
+   └─────────┬────────────┘
+             ▼
+        MongoDB Atlas
+```
+
+A mutation through `POST /api/products` calls the manager, the manager emits a Socket.IO event, and any browser open at `/realtimeproducts` sees the update without polling.
+
+---
+
+## Quick Start
+
 ```bash
+git clone https://github.com/Tojohtml98/Nodejs-Ecommerce-API.git
+cd Nodejs-Ecommerce-API
 npm install
+cp .env.example .env   # set MONGODB_URI
+npm start              # production
+npm run dev            # nodemon
 ```
 
-3. Instalar y ejecutar MongoDB:
+Server boots on `http://localhost:8080`.
+
+- REST root: `http://localhost:8080/api/products`
+- Live view: `http://localhost:8080/realtimeproducts`
+
+---
+
+## API Reference
+
+### Products
+
+| Method | Endpoint              | Notes                                          |
+| ------ | --------------------- | ---------------------------------------------- |
+| GET    | `/api/products`       | Paginated. Query: `limit`, `page`, `sort`, `query` |
+| GET    | `/api/products/:pid`  | Get one                                        |
+| POST   | `/api/products`       | Joi-validated body                             |
+| PUT    | `/api/products/:pid`  | Partial update                                 |
+| DELETE | `/api/products/:pid`  | Remove                                         |
+
+### Carts
+
+| Method | Endpoint                            | Notes                                          |
+| ------ | ----------------------------------- | ---------------------------------------------- |
+| POST   | `/api/carts`                        | Create empty cart                              |
+| GET    | `/api/carts/:cid`                   | Returns cart with populated products           |
+| POST   | `/api/carts/:cid/products/:pid`     | Add product to cart                            |
+| PUT    | `/api/carts/:cid/products/:pid`     | Update quantity                                |
+| DELETE | `/api/carts/:cid/products/:pid`     | Remove product                                 |
+| DELETE | `/api/carts/:cid`                   | Empty cart                                     |
+
+### System
+
+| Method | Endpoint     | Notes                                       |
+| ------ | ------------ | ------------------------------------------- |
+| GET    | `/`          | API index                                   |
+| GET    | `/health`    | Uptime + status JSON                        |
+| GET    | `/home`      | Server-rendered product list (Handlebars)   |
+| GET    | `/realtimeproducts` | Same list, live via Socket.IO        |
+
+### Try it (cURL)
+
 ```bash
-# En Windows (con MongoDB instalado)
-mongod
+# List products, page 1, 5 per page, sorted by price asc
+curl 'https://nodejs-ecommerce-api-oqbu.onrender.com/api/products?limit=5&page=1&sort=asc'
 
-# En macOS (con Homebrew)
-brew services start mongodb-community
-
-# En Linux
-sudo systemctl start mongod
+# Create a product (triggers a Socket.IO broadcast)
+curl -X POST https://nodejs-ecommerce-api-oqbu.onrender.com/api/products \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Mate Imperial",
+    "description": "Calabaza curada, virola de alpaca",
+    "price": 8500,
+    "stock": 12,
+    "category": "mates",
+    "code": "MATE-001"
+  }'
 ```
 
-4. (Opcional) Configurar variable de entorno para MongoDB:
-```bash
-# Windows
-set MONGODB_URI=mongodb://localhost:27017/ecommerce
+---
 
-# macOS/Linux
-export MONGODB_URI=mongodb://localhost:27017/ecommerce
-```
+## Environment
 
-## Uso
+| Variable        | Required | Description                                  |
+| --------------- | -------- | -------------------------------------------- |
+| `MONGODB_URI`   | Yes      | MongoDB Atlas connection string              |
+| `PORT`          | No       | HTTP port (default `8080`)                   |
+| `NODE_ENV`      | No       | `development` \| `production`                |
 
-### Iniciar el servidor
-```bash
-npm start
-```
+---
 
-El servidor se ejecutará en `http://localhost:8080`
+## Deployment
 
-### Modo desarrollo (con auto-reload)
-```bash
-npm run dev
-```
+- **Host:** Render (free tier) · `render.yaml` blueprint at repo root
+- **CD:** Auto-deploy on push to `main`
+- **DB:** MongoDB Atlas (M0 cluster, separate database per project)
+- **Cold start:** ~25s on first hit after idle (free tier limitation)
 
-## Vistas Disponibles
+---
 
-### 🏠 Vista Home (`/home`)
-- Lista todos los productos en una interfaz web
-- Diseño responsive con Bootstrap
-- Navegación entre vistas
+## Design Decisions
 
-### 📦 Vista Productos (`/products`)
-- Lista de productos con **paginación**
-- Filtros por categoría y disponibilidad
-- Ordenamiento por precio (asc/desc)
-- Botones para ver detalles o agregar al carrito
+- **Why share the data layer between REST and views?** A single source of truth means the view never disagrees with the API. Two adapters for one set of business rules is cheaper than two systems pretending the same data twice.
+- **Why Socket.IO over Server-Sent Events?** SSE is simpler, but Socket.IO's auto-reconnect and room semantics paid for themselves the first time the WebSocket dropped on Render's free plan.
+- **Why Joi at the route and not inside the manager?** Validation is an HTTP concern: bad input should never reach the business layer. The manager assumes its inputs are already trustworthy.
+- **Why `mongoose-paginate-v2` over manual `skip/limit`?** Manual pagination loses metadata (`hasNextPage`, `prevLink`) and tends to be reimplemented at every endpoint. A plugin centralizes both.
 
-### 🔍 Vista Detalle de Producto (`/products/:pid`)
-- Muestra información completa del producto
-- Imágenes si están disponibles
-- Botón para agregar al carrito
-- Navegación de vuelta a productos
+---
 
-### 🛒 Vista Carrito (`/carts/:cid`)
-- Lista de productos del carrito con **populate**
-- Cálculo automático de totales
-- Eliminar productos individuales
-- Vaciar carrito completo
+## License
 
-### ⚡ Vista Tiempo Real (`/realtimeproducts`)
-- Lista de productos con actualizaciones en tiempo real
-- Formulario para agregar nuevos productos
-- Eliminación de productos con confirmación
-- Indicador de conexión WebSocket
-
-## Endpoints API
-
-### Vistas Web
-- `GET /home` - Vista home con lista de productos
-- `GET /products` - Vista de productos con paginación
-- `GET /products/:pid` - Detalle de producto
-- `GET /carts/:cid` - Vista de carrito
-- `GET /realtimeproducts` - Vista en tiempo real con WebSockets
-
-### API REST - Productos (`/api/products`)
-
-#### GET `/api/products`
-Lista productos con paginación, filtros y ordenamiento.
-
-**Query Parameters:**
-- `limit` (opcional, default: 10): Número de productos por página
-- `page` (opcional, default: 1): Página a mostrar
-- `sort` (opcional): `asc` o `desc` para ordenar por precio
-- `query` (opcional): Filtros JSON codificados
-
-**Ejemplos:**
-```bash
-# Obtener primera página
-GET /api/products
-
-# Obtener segunda página con 5 productos
-GET /api/products?page=2&limit=5
-
-# Ordenar por precio descendente
-GET /api/products?sort=desc
-
-# Filtrar por categoría
-GET /api/products?query={"category":"Electrónicos"}
-
-# Combinar filtros
-GET /api/products?page=1&limit=10&sort=asc&query={"status":true}
-```
-
-**Respuesta:**
-```json
-{
-  "status": "success",
-  "payload": [...],
-  "totalPages": 5,
-  "prevPage": null,
-  "nextPage": 2,
-  "page": 1,
-  "hasPrevPage": false,
-  "hasNextPage": true,
-  "prevLink": null,
-  "nextLink": "/api/products?page=2&limit=10"
-}
-```
-
-#### GET `/api/products/:pid`
-Obtiene un producto por su ID.
-
-**Respuesta:**
-```json
-{
-  "status": "success",
-  "payload": {
-    "_id": "...",
-    "title": "Producto de ejemplo",
-    "description": "Descripción del producto",
-    "code": "PROD001",
-    "price": 100.50,
-    "status": true,
-    "stock": 50,
-    "category": "Categoría",
-    "thumbnails": ["https://example.com/image1.jpg"],
-    "createdAt": "...",
-    "updatedAt": "..."
-  }
-}
-```
-
-#### POST `/api/products`
-Crea un nuevo producto.
-
-**Body:**
-```json
-{
-  "title": "Producto de ejemplo",
-  "description": "Descripción del producto",
-  "code": "PROD001",
-  "price": 100.50,
-  "status": true,
-  "stock": 50,
-  "category": "Categoría",
-  "thumbnails": ["https://example.com/image1.jpg"]
-}
-```
-
-**Campos requeridos:** `title`, `description`, `code`, `price`, `stock`, `category`
-
-**Validaciones:**
-- `title`: 1-100 caracteres
-- `description`: 1-500 caracteres
-- `code`: 1-20 caracteres, único
-- `price`: número positivo
-- `stock`: entero no negativo
-- `category`: 1-50 caracteres
-- `thumbnails`: array de URLs válidas
-
-#### PUT `/api/products/:pid`
-Actualiza un producto existente (todos los campos opcionales).
-
-#### DELETE `/api/products/:pid`
-Elimina un producto.
-
-### API REST - Carritos (`/api/carts`)
-
-#### POST `/api/carts`
-Crea un nuevo carrito vacío.
-
-**Respuesta:**
-```json
-{
-  "status": "success",
-  "message": "Carrito creado exitosamente",
-  "payload": {
-    "_id": "...",
-    "products": []
-  }
-}
-```
-
-#### GET `/api/carts/:cid`
-Obtiene los productos de un carrito **con populate**.
-
-**Respuesta:**
-```json
-{
-  "status": "success",
-  "payload": {
-    "_id": "...",
-    "products": [
-      {
-        "productId": {
-          "_id": "...",
-          "title": "Producto de ejemplo",
-          "price": 100.50,
-          ...
-        },
-        "quantity": 2
-      }
-    ]
-  }
-}
-```
-
-#### POST `/api/carts/:cid/product/:pid`
-Agrega un producto al carrito o incrementa su cantidad.
-
-**Body:**
-```json
-{
-  "quantity": 2
-}
-```
-
-**Funcionalidades:**
-- ✅ Valida que el carrito existe
-- ✅ Valida que el producto existe
-- ✅ Verifica stock disponible
-- ✅ Si el producto ya está en el carrito, incrementa la cantidad
-- ✅ Descuenta el stock del producto
-
-#### DELETE `/api/carts/:cid/products/:pid`
-Elimina un producto del carrito.
-
-#### PUT `/api/carts/:cid`
-Actualiza todos los productos del carrito.
-
-**Body:**
-```json
-{
-  "products": [
-    {
-      "productId": "product_id_1",
-      "quantity": 3
-    },
-    {
-      "productId": "product_id_2",
-      "quantity": 1
-    }
-  ]
-}
-```
-
-#### PUT `/api/carts/:cid/products/:pid`
-Actualiza SOLO la cantidad de un producto en el carrito.
-
-**Body:**
-```json
-{
-  "quantity": 5
-}
-```
-
-#### DELETE `/api/carts/:cid`
-Elimina todos los productos del carrito.
-
-## Manejo de Errores
-
-La API utiliza códigos de estado HTTP apropiados y mensajes de error consistentes:
-
-### Códigos de Estado
-- `200`: Operación exitosa
-- `201`: Recurso creado exitosamente
-- `400`: Error en los parámetros de la petición
-- `404`: Recurso no encontrado
-- `409`: Conflicto (código duplicado, stock insuficiente)
-- `422`: Error de validación de datos
-- `500`: Error interno del servidor
-
-### Formato de Errores
-```json
-{
-  "status": "error",
-  "message": "Descripción del error",
-  "errors": [
-    {
-      "field": "campo",
-      "message": "Mensaje específico del error",
-      "value": "valor proporcionado"
-    }
-  ]
-}
-```
-
-## Estructura del Proyecto
-
-```
-src/
-├── config/
-│   └── database.js           # Configuración de MongoDB
-├── models/
-│   ├── Product.js            # Modelo de Producto con Mongoose
-│   └── Cart.js               # Modelo de Carrito con Mongoose
-├── managers/
-│   ├── ProductManager.js     # Lógica de negocio para productos
-│   └── CartManager.js        # Lógica de negocio para carritos
-├── routes/
-│   ├── products.router.js    # Rutas de productos
-│   ├── carts.router.js       # Rutas de carritos
-│   └── views.router.js       # Rutas de vistas web
-├── schemas/
-│   ├── productSchemas.js     # Esquemas de validación Joi para productos
-│   └── cartSchemas.js        # Esquemas de validación Joi para carritos
-├── middlewares/
-│   └── validation.js         # Middlewares de validación y manejo de errores
-├── views/                    # Plantillas Handlebars
-│   ├── home.handlebars
-│   ├── products.handlebars
-│   ├── productDetail.handlebars
-│   ├── cart.handlebars
-│   ├── realTimeProducts.handlebars
-│   └── error.handlebars
-└── app.js                    # Configuración principal con Socket.IO
-```
-
-## WebSockets
-
-El proyecto incluye integración completa con Socket.IO:
-
-### Eventos del Servidor
-- `productAdded`: Se emite cuando se agrega un nuevo producto
-- `productDeleted`: Se emite cuando se elimina un producto
-- `productsUpdated`: Se emite cuando se actualiza la lista de productos
-
-### Eventos del Cliente
-- `addProduct`: Envía datos de un nuevo producto al servidor
-- `deleteProduct`: Solicita la eliminación de un producto
-
-## Persistencia de Datos
-
-Los datos se almacenan en **MongoDB**:
-- Base de datos: `ecommerce` (configurable)
-- Colecciones: `products`, `carts`
-- Modelos con Mongoose
-- Referencias entre documentos para productos en carritos
-- Plugin `mongoose-paginate-v2` para paginación
-
-## Tecnologías Utilizadas
-
-- **Node.js**: Runtime de JavaScript
-- **Express**: Framework web
-- **MongoDB**: Base de datos NoSQL
-- **Mongoose**: ODM para MongoDB
-- **mongoose-paginate-v2**: Plugin de paginación
-- **Handlebars**: Motor de plantillas
-- **Socket.IO**: WebSockets
-- **Joi**: Validación de esquemas
-- **Bootstrap**: Framework CSS
-
-## Características Principales
-
-### ✅ Paginación de Productos
-- Sistema completo de paginación con links previos/siguientes
-- Filtros flexibles por categoría y disponibilidad
-- Ordenamiento ascendente/descendente por precio
-
-### ✅ Gestión Avanzada de Carritos
-- Referencias a productos con populate
-- Actualización individual de cantidades
-- Actualización masiva de productos
-- Eliminación de productos específicos
-- Vaciar carrito completo
-- Gestión automática de stock
-
-### ✅ Validación y Errores
-- Validación completa con Joi
-- Mensajes de error descriptivos
-- Códigos HTTP apropiados
-- Manejo centralizado de errores
-
-### ✅ Experiencia de Usuario
-- Interfaz responsive con Bootstrap
-- Navegación intuitiva
-- Cálculo automático de totales
-- Confirmaciones para acciones destructivas
-
-## Licencia
-
-ISC
+MIT © [Tomás Orella](https://github.com/Tojohtml98)
