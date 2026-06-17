@@ -15,10 +15,17 @@
   <img src="https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white" alt="Express" />
   <img src="https://img.shields.io/badge/Socket.IO-4-010101?logo=socket.io&logoColor=white" alt="Socket.IO" />
   <img src="https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white" alt="MongoDB" />
+  <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL" />
   <img src="https://img.shields.io/badge/Joi-validation-0769AD" alt="Joi" />
   <img src="https://img.shields.io/badge/Handlebars-views-F0772B?logo=handlebarsdotjs&logoColor=white" alt="Handlebars" />
   <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT" />
 </p>
+
+---
+
+> 🐘 **Also available as a relational implementation.** The same domain (products + carts)
+> modeled in **PostgreSQL** — schema with foreign keys and constraints, repositories using
+> raw parametrized SQL, JOINs, and transactions with row locking. See [`postgres/`](./postgres/).
 
 ---
 

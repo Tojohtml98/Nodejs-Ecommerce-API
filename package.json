@@ -6,7 +6,11 @@
   "type": "module",
   "scripts": {
     "start": "node src/app.js",
-    "dev": "nodemon src/app.js"
+    "dev": "nodemon src/app.js",
+    "pg:up": "docker compose -f postgres/docker-compose.yml up -d",
+    "pg:down": "docker compose -f postgres/docker-compose.yml down",
+    "pg:seed": "node postgres/seed.js",
+    "pg:demo": "node postgres/demo.js"
   },
   "keywords": [],
   "author": "",
@@ -18,10 +22,12 @@
     "joi": "^17.11.0",
     "mongoose": "^8.19.2",
     "mongoose-paginate-v2": "^1.9.1",
+    "pg": "^8.21.0",
     "socket.io": "^4.7.4",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "dotenv": "^17.4.2",
     "nodemon": "^3.0.1"
   }
 }
