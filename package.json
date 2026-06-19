@@ -7,6 +7,8 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
+    "test:coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand --coverage",
     "pg:up": "docker compose -f postgres/docker-compose.yml up -d",
     "pg:down": "docker compose -f postgres/docker-compose.yml down",
     "pg:seed": "node postgres/seed.js",
@@ -27,7 +29,11 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "cross-env": "^10.1.0",
     "dotenv": "^17.4.2",
-    "nodemon": "^3.0.1"
+    "jest": "^30.4.2",
+    "mongodb-memory-server": "^11.2.0",
+    "nodemon": "^3.0.1",
+    "supertest": "^7.2.2"
   }
 }

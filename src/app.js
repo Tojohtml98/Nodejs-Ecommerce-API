@@ -96,4 +96,10 @@ const startServer = async () => {
     }
 };
 
-startServer();
+// Solo arrancar el servidor fuera del entorno de test.
+// En test importamos `app` con Supertest, sin abrir puerto ni conectar a la base real.
+if (process.env.NODE_ENV !== 'test') {
+    startServer();
+}
+
+export { app, server, io };
