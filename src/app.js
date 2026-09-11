@@ -21,7 +21,10 @@ const io = new Server(server);
 const PORT = process.env.PORT || 8080;
 
 // --- Configuración Handlebars ---
-app.engine('handlebars', engine());
+// defaultLayout: false — cada vista es un documento HTML standalone,
+// no hay views/layouts/, así que el layout por defecto de express-handlebars
+// rompía TODAS las vistas con ENOENT (bug preexistente, no del rediseño).
+app.engine('handlebars', engine({ defaultLayout: false }));
 app.set('view engine', 'handlebars');
 app.set('views', path.join(__dirname, '../views'));
 
