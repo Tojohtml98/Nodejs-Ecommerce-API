@@ -5,20 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{title}}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/theme.css">
     <script src="/socket.io/socket.io.js"></script>
     <style>
-        .product-card {
-            transition: transform 0.2s;
-        }
-        .product-card:hover {
-            transform: translateY(-5px);
-        }
-        .form-container {
-            background-color: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
         .status-indicator {
             position: fixed;
             top: 20px;
@@ -28,11 +20,12 @@
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-brand-theme">
         <div class="container">
             <a class="navbar-brand" href="/">E-commerce</a>
             <div class="navbar-nav">
                 <a class="nav-link" href="/home">Home</a>
+                <a class="nav-link" href="/products">Productos</a>
                 <a class="nav-link active" href="/realtimeproducts">Tiempo Real</a>
             </div>
         </div>
@@ -46,7 +39,7 @@
     <div class="container mt-4">
         <div class="row">
             <div class="col-12">
-                <h1 class="mb-4">{{title}}</h1>
+                <h1 class="mb-4 page-title">{{title}}</h1>
                 
                 <!-- Formulario para agregar productos -->
                 <div class="form-container">

@@ -1,0 +1,346 @@
+/* ============================================================
+   Theme — Nodejs Ecommerce API (vistas Handlebars)
+   Paleta: índigo/violeta sobre fondo claro.
+   Reemplaza el look "de fábrica" de Bootstrap por identidad propia.
+   ============================================================ */
+
+:root {
+    --color-bg: #f7f6fb;
+    --color-surface: #ffffff;
+    --color-border: #e4e1f2;
+
+    --color-text: #241f33;
+    --color-text-muted: #665f80;
+
+    --color-primary: #5b3df0;
+    --color-primary-dark: #4527d9;
+    --color-primary-darker: #3a1fb8;
+    --color-primary-light: #7c5cff;
+    --color-primary-soft: #eee9fd;
+
+    --color-accent: #a855f7;
+
+    --color-success: #16a34a;
+    --color-success-soft: #e8f7ee;
+    --color-danger: #dc2626;
+    --color-danger-soft: #fdecec;
+    --color-info: #4527d9;
+    --color-info-soft: #eee9fd;
+
+    --shadow-card: 0 2px 6px rgba(43, 24, 110, 0.06), 0 8px 24px rgba(43, 24, 110, 0.06);
+    --shadow-card-hover: 0 10px 28px rgba(43, 24, 110, 0.14);
+
+    --radius-md: 12px;
+    --radius-lg: 16px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+a {
+    color: var(--color-primary-dark);
+}
+
+a:hover {
+    color: var(--color-primary-darker);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    color: var(--color-text);
+    letter-spacing: -0.01em;
+}
+
+.page-title {
+    font-weight: 700;
+    color: var(--color-text);
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+
+.page-title::after {
+    content: "";
+    display: block;
+    width: 48px;
+    height: 4px;
+    margin-top: 0.5rem;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+}
+
+/* ---------- Navbar propia ---------- */
+
+.navbar-brand-theme {
+    background-color: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: 0 1px 2px rgba(43, 24, 110, 0.04);
+}
+
+.navbar-brand-theme .navbar-brand {
+    font-weight: 800;
+    font-size: 1.25rem;
+    color: var(--color-primary-dark) !important;
+    letter-spacing: -0.02em;
+}
+
+.navbar-brand-theme .navbar-brand::before {
+    content: "◆";
+    color: var(--color-accent);
+    margin-right: 0.4rem;
+}
+
+.navbar-brand-theme .nav-link {
+    color: var(--color-text-muted) !important;
+    font-weight: 500;
+    border-radius: 8px;
+    padding: 0.4rem 0.75rem !important;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.navbar-brand-theme .nav-link:hover {
+    color: var(--color-primary-dark) !important;
+    background-color: var(--color-primary-soft);
+}
+
+.navbar-brand-theme .nav-link.active {
+    color: var(--color-primary-dark) !important;
+    background-color: var(--color-primary-soft);
+    font-weight: 600;
+}
+
+.navbar-brand-theme .navbar-toggler {
+    border-color: var(--color-border);
+}
+
+/* ---------- Contenedor de filtros / formularios ---------- */
+
+.filter-container,
+.form-container {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+}
+
+/* ---------- Cards de producto ---------- */
+
+.product-card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    overflow: hidden;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-card-hover);
+    border-color: var(--color-primary-light);
+}
+
+.product-card .card-title {
+    color: var(--color-text);
+    font-weight: 700;
+}
+
+.product-card .card-text {
+    color: var(--color-text-muted);
+}
+
+.product-card ul li strong {
+    color: var(--color-text);
+}
+
+.card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+}
+
+/* ---------- Botones ---------- */
+
+.btn-primary {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(91, 61, 240, 0.25);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+    box-shadow: 0 4px 12px rgba(91, 61, 240, 0.32);
+}
+
+.btn-secondary {
+    background-color: var(--color-surface);
+    border-color: var(--color-border);
+    color: var(--color-text);
+    font-weight: 600;
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus {
+    background-color: var(--color-primary-soft);
+    border-color: var(--color-primary-light);
+    color: var(--color-primary-dark);
+}
+
+.btn-success {
+    background-color: var(--color-success);
+    border-color: var(--color-success);
+    font-weight: 600;
+}
+
+.btn-success:hover,
+.btn-success:focus {
+    background-color: #128a3e;
+    border-color: #128a3e;
+}
+
+.btn-danger {
+    background-color: var(--color-danger);
+    border-color: var(--color-danger);
+    font-weight: 600;
+}
+
+.btn-danger:hover,
+.btn-danger:focus {
+    background-color: #b91c1c;
+    border-color: #b91c1c;
+}
+
+.btn:focus,
+.btn:focus-visible,
+.nav-link:focus-visible,
+a:focus-visible {
+    outline: 3px solid var(--color-primary-light);
+    outline-offset: 2px;
+}
+
+/* ---------- Alertas ---------- */
+
+.alert-info {
+    background-color: var(--color-info-soft);
+    border: 1px solid var(--color-primary-light);
+    color: var(--color-primary-darker);
+    border-radius: var(--radius-md);
+}
+
+.alert-danger {
+    background-color: var(--color-danger-soft);
+    border: 1px solid #f3b4b4;
+    color: #8f1d1d;
+    border-radius: var(--radius-md);
+}
+
+/* ---------- Badges ---------- */
+
+.badge.bg-success {
+    background-color: var(--color-success) !important;
+}
+
+.badge.bg-danger {
+    background-color: var(--color-danger) !important;
+}
+
+.badge.bg-secondary {
+    background-color: var(--color-text-muted) !important;
+}
+
+/* ---------- Paginación ---------- */
+
+.pagination .page-link {
+    color: var(--color-primary-dark);
+    border-color: var(--color-border);
+}
+
+.pagination .page-link:hover {
+    background-color: var(--color-primary-soft);
+    color: var(--color-primary-darker);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+}
+
+.pagination .page-item.disabled .page-link {
+    color: var(--color-text-muted);
+    background-color: var(--color-surface);
+}
+
+/* ---------- Tabla del carrito ---------- */
+
+.table {
+    color: var(--color-text);
+}
+
+.table thead th {
+    color: var(--color-text-muted);
+    font-weight: 600;
+    border-bottom: 2px solid var(--color-border);
+    text-transform: uppercase;
+    font-size: 0.78rem;
+    letter-spacing: 0.03em;
+}
+
+.table td {
+    border-color: var(--color-border);
+    vertical-align: middle;
+}
+
+/* ---------- Indicador de conexión (realtime) ---------- */
+
+.status-indicator .badge {
+    font-weight: 600;
+    padding: 0.5rem 0.85rem;
+    border-radius: 999px;
+    box-shadow: 0 2px 8px rgba(43, 24, 110, 0.12);
+}
+
+.status-indicator .badge.bg-secondary {
+    background-color: var(--color-text-muted) !important;
+}
+
+.status-indicator .badge.bg-success {
+    background-color: var(--color-success) !important;
+}
+
+.status-indicator .badge.bg-danger {
+    background-color: var(--color-danger) !important;
+}
+
+/* ---------- Inputs ---------- */
+
+.form-control,
+.form-select {
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    color: var(--color-text);
+    background-color: var(--color-surface);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--color-primary-light);
+    box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.2);
+}
+
+.form-label {
+    color: var(--color-text-muted);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
